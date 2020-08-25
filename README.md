@@ -1,2 +1,2 @@
-# emu-65xx
-a software emulator for the 6500 series micro-controllers
+# Python based emulator for the 6500 series of microcontrollers
+
