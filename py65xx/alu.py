@@ -16,17 +16,17 @@ SHR -- Shift Register A right one bit
 
 """
 
-from enum import Enum
+from enum import IntEnum
 import numpy as np
 
 np.seterr(over="ignore")
 
-class OpCode(Enum):
-    ADD = 0
-    OR = 1
-    XOR = 2
-    AND = 3
-    SHR = 4
+class OpCode(IntEnum):
+    ADD = 0 # Addition
+    OR = 1 # bitwise OR
+    XOR = 2 # bitwise XOR
+    AND = 3 # bitwise AND
+    SHR = 4 # Logical shift right
 
 class ALU():
 
@@ -36,14 +36,14 @@ class ALU():
         self._O = np.ubyte(0x00)  # Output Register
         self._overflow = False   # Overflow/Underflow flag
 
-        # Dictionary responsible for calling functions
-        self._op_dict = {
-            OpCode.ADD: self._add,
-            OpCode.OR: self._or,
-            OpCode.XOR: self._xor,
-            OpCode.AND: self._and,
-            OpCode.SHR: self._shift_right,
-        }
+        # tuple of ALU operations responsible for calling functions
+        self._op_set = (
+            self._add,
+            self._or,
+            self._xor,
+            self._and,
+            self._shift_right
+        )
 
     def run(self, a_reg, b_reg, operation):
         """
@@ -55,12 +55,12 @@ class ALU():
         :return:
         """
         # load the register values into the instance
-        self._A = np.ubyte(a_reg)
-        self._B = np.ubyte(b_reg)
+        self._A = a_reg
+        self._B = b_reg
 
         self._overflow = False  # Clear the overflow flag
-        self._op_dict[operation]()  # Call the operation
-        return self._O,self._overflow  # return the result of the operation and whether the overflow bit was set
+        self._op_set[operation]()  # Call the operation
+        return self._O, self._overflow  # return the result of the operation and whether the overflow bit was set
 
     def _add(self):
         """
@@ -70,30 +70,26 @@ class ALU():
         """
         self._O = self._A + self._B
         # overflow checks if 2x negatives results in a positive or visa versa
-        a_msb = np.right_shift(self._A,7)
-        b_msb = np.right_shift(self._B,7)
-        o_msb = np.right_shift(self._O,7)
+        a_msb = self._A >= 0x80
+        b_msb = self._B >= 0x80
+        o_msb = self._O >= 0x80
         self._overflow = (not a_msb) and (not b_msb) and o_msb or (a_msb and b_msb and not o_msb)
 
     def _or(self):
         # Bitwise Or Operation
         self._O = np.bitwise_or(self._A, self._B)
-        pass
 
     def _xor(self):
         # Bitwise Exclusive OR
         self._O = np.bitwise_xor(self._A, self._B)
-        pass
 
     def _and(self):
         # Bitwise AND
         self._O = np.bitwise_and(self._A, self._B)
-        pass
 
     def _shift_right(self):
         # Shift right 1 bit
         self._O = np.right_shift(self._A, 1)
-        pass
 
 
 
